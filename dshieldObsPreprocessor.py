@@ -9,7 +9,6 @@ import datetime
 import shutil
 from createSoilMoistureModelErrFile import SmmConverter
 
-# TODO: FIX BUG!  writeHorizonGpFile(satId) should not take in satId, horizonGP file spans multiple satId's
 class ObsPreprocessor:
     def __init__(self):
         self.dataPath = "/Users/richardlevinson/DshieldDemoData2022/"
