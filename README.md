@@ -17,8 +17,8 @@ Requires Python 3.8 or higher.
 Preprocessing reads the raw input data described above and produces files for planner input. 
 There are 2 preprocessing scripts:
 _createSoilMoistureModelErrFile.py_: This consolidates the raw soil moisture prediction error files. It must be run whenever those soil moisture prediction data changes.
-_dshieldObsPreprocessor.py_: This reads the payload access and eclipse files and consolidates the observation command choices for each satellite for each plan horizon (default plan horizon is 6 hours but configurable). This must be run for each (set of) satellite(s) and each plan horizon. Input parameters are the # of satellites in the constellation, and a planning horizon index (1 through 4). 
+_dshieldObsPreprocessor.py_: This reads the payload access and eclipse files and consolidates the observation command choices for each satellite for each plan horizon (default plan horizon is 6 hours but configurable). This must be run for each (set of) satellite(s) and each plan horizon. Input parameters are the list of satellites in the constellation, and a planning horizon index (1 through 4). 
 
 # Planning
 After preprocessing, the planner can be run. There is one planner script.
-_dsheildObsPlanner.py_: This reads the files produced by preprocessing and produces a coordinate observation plan for all satellites in the constellation for each plan horizon. This must be run for each (set of) satellite(s) and each horizon. Input parameters are the # of satellites in the constellation, and the planning horizon index (1 through 4)
+_dsheildObsPlanner.py_: This reads the files produced by preprocessing and produces a coordinate observation plan for all satellites in the constellation for each plan horizon. This must be run for each (set of) satellite(s) and each horizon. Input parameters are the list of satellites in the constellation, and the planning horizon index (1 through 4)
