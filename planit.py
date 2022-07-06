@@ -219,6 +219,8 @@ class Planit:
                                 child.unassignedVars.remove(unassignedVar)
                                 childVar.assignment = choiceTuple
                                 child.var = childVar
+
+                                # propagate choice
                                 if self.choicePropagator:
                                     self.choicePropagator(child, childVar)
                                 break

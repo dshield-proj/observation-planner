@@ -1,7 +1,8 @@
 import os
 from decimal import Decimal
 
-dataPath = "/Users/richardlevinson/DshieldDemoData2022/"
+# dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run1/"  # first  24 hours (1/4/20)
+dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/"    # second 24 hours (1/5/20)
 
 def readMeasurementErrorTables():
     errTable1  = readMeasurementErrorTable(1)
@@ -260,3 +261,10 @@ def getPriorObservationFilename(filepath, fileprefix):
 
 def roundIt(n, precision=5):
     return round(n, precision)
+
+def getUnassignedVarChoices(node, varName):
+    vars = node.unassignedVars
+    for var in vars:
+        if var.name == varName:
+            return list(var.choices.keys())
+

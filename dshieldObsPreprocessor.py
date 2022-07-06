@@ -11,7 +11,8 @@ from createSoilMoistureModelErrFile import SmmConverter
 
 class ObsPreprocessor:
     def __init__(self):
-        self.dataPath = "/Users/richardlevinson/DshieldDemoData2022/"
+        # self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run1/"  # first  24 hours (1/4/20)
+        self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/"    # second 24 hours (1/5/20)
         self.gpDict = {}
         self.latDict = {} # maps latitude into GPI for reading saturation data
         self.slewTable = {}
@@ -52,14 +53,15 @@ class ObsPreprocessor:
         self.horizonDur    = 21600
         self.rainHourStart = None
         self.rainHourEnd   = None
-
+        self.experimentRun = None
         self.imageLock = False  # true if each accessTime lasts 3 ticks
         self.maxFollowUpSeparationMinutes = 120
         self.stats = {}
 
-    def start(self, satList, inputFileDate, horizonId):
+    def start(self, satList, inputFileDate, experimentRun, horizonId):
         self.horizonId = horizonId  # 1 2 3 4
         self.inputFileDate = inputFileDate
+        self.experimentRun = experimentRun
         self.horizonStart = ((self.horizonId - 1) * self.horizonDur) #  #0 #21600
         self.horizonEnd = self.horizonStart + self.horizonDur - 1
         self.initStats()
@@ -888,7 +890,7 @@ class ObsPreprocessor:
         payloadName += str(sat.id)
         fileSuffix = dshieldUtil.convertDateTimeToFilenameFormat(self.inputFileDate, self.horizonId)
         payloadFilename = payloadName + "_"+fileSuffix
-        dataPath = self.dataPath + "operator/orbit_prediction/RUN001/" + "sat"+str(sat.id)+"/access/"+payloadName+"/"
+        dataPath = self.dataPath + "operator/orbit_prediction/"+self.experimentRun+"/" + "sat"+str(sat.id)+"/access/"+payloadName+"/"
         dataPath += payloadFilename
         # dataPath = self.dataPath + "swarm/" + "sat"+str(sat.id)+"/"+payloadFilename
         payload = sat.payload1 if payloadId == 1 else sat.payload2
@@ -945,7 +947,7 @@ class ObsPreprocessor:
     def copyEclipseFilesToPreprocessingFolders(self, satList):
         for satId in satList:
             # fileSuffix = dshieldUtil.convertDateTimeToFilenameFormat(self.inputFileDate, self.horizonId)
-            dataPathIn = self.dataPath + "operator/orbit_prediction/RUN001/" + "sat"+str(satId)+"/eclipse/"
+            dataPathIn = self.dataPath + "operator/orbit_prediction/"+self.experimentRun+"/" + "sat"+str(satId)+"/eclipse/"
             assert os.path.exists(dataPathIn), "copyEclipseFilesToPreprocessingFolders() ERROR! path not found: "+dataPathIn
             files = os.listdir(dataPathIn)
             destFolder = dshieldUtil.getPrepPathForSat(satId)
@@ -1100,10 +1102,11 @@ class ObsPreprocessor:
 
 def main():
     obsPreprocessor = ObsPreprocessor()
-    satList = [1,2,3] #,2,3]
-    inputFileDate = datetime.date(2020,1,4) # y,m,d = 1/4/2022
+    satList = [1,2,3]
+    experimentRun = "RUN002" # "RUN001"
+    inputFileDate = datetime.date(2020,1,5) # y,m,d = 1/4/2022
     horizonId = 4
-    obsPreprocessor.start(satList, inputFileDate, horizonId)
+    obsPreprocessor.start(satList, inputFileDate, experimentRun, horizonId)
 
 if __name__ == '__main__':
     main()

@@ -15,13 +15,13 @@ def main():
 
     # settings
     satList = [1,2,3]
-    horizonId = 1
+    horizonId = 3
     maxTick = None
     strategy = "beam.3"  #dfs # beam.2
-    inputFileDate = datetime.date(2020,1,4) # y,m,d = 1/4/2022
-
+    inputFileDate = datetime.date(2020,1,5) # y,m,d = 1/4/2022
+    experimentRun = "RUN002" #"RUN001"
     # main processing
-    obsPlanner = ObsPlanner(satList, inputFileDate, horizonId, maxTick, strategy)
+    obsPlanner = ObsPlanner(satList, inputFileDate, horizonId, experimentRun, maxTick, strategy)
     obsPlanner.statsInit()
     obsPlanner.createInitialPlan()
     obsPlanner.executePlan(obsPlanner.plan)
@@ -32,10 +32,12 @@ def main():
 
 
 class ObsPlanner:
-    def __init__(self, satList, inputFileDate, horizonId, maxTick, strategy):
+    def __init__(self, satList, inputFileDate, horizonId, experimentRun, maxTick, strategy):
         # TODO: replace these data paths with your path to where you downloaded the data
-        self.dataPath = "/Users/richardlevinson/DshieldDemoData2022/planner/"
-        self.demoDataPath = "/Users/richardlevinson/DshieldDemoData2022/"
+        # self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run1/planner/"
+        # self.demoDataPath = "/Users/richardlevinson/DshieldDemoData2022_Run1/"
+        self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/planner/"
+        self.demoDataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/"
         # config params (set in start())
         # planner config params
         beamwidth = 1
@@ -49,6 +51,7 @@ class ObsPlanner:
         self.nodeSorterHeuristic = strategy #"beam" #"dfs"
         self.valSelectorHeuristic = "maxErrReduction" #"maxGpCount" #"gpRankedChoice" #"maxErrReduction" #"maxErrReduction" # "maxGpCount" #maxGpRankedChoice #"minGpChoiceErr"  #"maxGpChoiceScore" #"maxGpCount" #maxChoiceScore"
         self.horizonDur = 21600
+        self.experimentRun = experimentRun
         self.maxTick =  maxTick
         self.useSortedGP = False
         self.sortedGPpct = 0.15
@@ -283,7 +286,7 @@ class ObsPlanner:
         self.successNode = self.planner.solveIt()
         if self.successNode:
             print("Solution Found!")
-            self.plan = self.collectPlan(self.successNode) # TODO: is this used?
+            self.plan = self.collectPlan(self.successNode) # Used by executePlan()
             self.observedGPs = self.collectObservedGP(self.successNode) #self.successNode.state['observedGp']
             # obsGP = self.collectObservedGP(self.successNode)
             if self.isGapPlan:
@@ -599,7 +602,6 @@ class ObsPlanner:
 #     Constraints
 
     def propagateChoice(self, node, var):
-        # print("propagateChoice() "+str(var))
         self.removeDuplicateObs(node, var.assignment[1], var.tick)
         self.removeInfeasibleSlewChoices(node, var)
 
@@ -609,15 +611,12 @@ class ObsPlanner:
         changedVars = []
         replacementVars = []
         for gpi in gpList:
-            # if gpi == 0:
-            #     print("Hey")
             gp = self.getGP(gpi)
             if gp:
                 gpTimes = gp.accessTimes
                 if len(gpTimes) > 1:
                     for gpTime in gpTimes:
                         if not gpTime == varTick:
-                            updatedGpLists = {}
                             # multiple sats may have action at same time (though likely not same GP at same time)
                             otherVars = self.getVarsForTime(node, gpTime)
                             for otherVar in otherVars:
@@ -627,6 +626,7 @@ class ObsPlanner:
                                 if otherVarCopy:
                                     otherVar = otherVarCopy
                                 choicesToRemove = []
+                                updatedGpLists = {}
                                 for otherVarChoiceKey in otherVar.choices.keys():
                                     choiceGPlist = otherVar.choices[otherVarChoiceKey]
                                     if gpi in choiceGPlist:
@@ -643,7 +643,8 @@ class ObsPlanner:
                                         otherVarCopy = copy.deepcopy(otherVar)
                                         replacementVars.append((varIndex, otherVarCopy))
                                     for updatedGpListKey in updatedGpLists.keys():
-                                        otherVarCopy.choices[updatedGpListKey] = updatedGpLists[updatedGpListKey]
+                                        if updatedGpListKey in otherVar.choices:
+                                            otherVarCopy.choices[updatedGpListKey] = updatedGpLists[updatedGpListKey]
                                     if otherVarCopy not in changedVars:
                                         changedVars.append(otherVarCopy)
                                     for choice in choicesToRemove:
@@ -1165,8 +1166,6 @@ class ObsPlanner:
         return bestVar
 
     def valSorter(self, node, var):
-        # if 219 <= var.tick and var.tick <= 224:
-        #     print('hey')
         result = []
         sortedChoices  = self.sortTpChoices(var) # returns tuples: (cmd, gpList, reward)
         # return sorted lists with non-empty gpLists (necessary check?)
@@ -1338,7 +1337,7 @@ class ObsPlanner:
         print("analyzeResults() initial Observed GP err summary: total: "+str(self.initialObservedGpErrTotal)+", avg: "+str(self.initialObservedGpErrAvg)+", count: "+str(self.initialObservedGpErrCount))
         print("analyzeResults() final Observed GP err summary: total: "+str(finalObservedGpErrTotal)+", avg: "+str(finalObservedGpErrAvg)+", count: "+str(finalObservedGpErrCount))
         print("analyzeResults() avgErrReduction: from plan cmds: "+str(avgObservedErrReductionFromPlan)+", from last node state: "+str(avgObservedErrReductionFromState)+", from totals: "+str(avgObservedErrReductionFromTotals))
-        print("analyzeResults() avg horizon err reduction per horizon gp: "+str(totalErrReduction))
+        print("analyzeResults() avg horizon err reduction per horizon gp: "+str(avgHorizonErrReduction))
         print("analyzeResults() total err reduction (objective score): "+str(totalErrReduction))
         print("analyzeResults() done")
 
@@ -1685,7 +1684,7 @@ class ObsPlanner:
         satName = "s"+str(satId)
         # satPlan = successNode.state['satPlans'][satId]
         filename = self.getHorizonFilenamePrefix(satId, self.horizonId) +"."+timestamp+".plan.txt"
-        filepath = self.dataPath + "RUN001/"+filename
+        filepath = self.dataPath + self.experimentRun+"/"+filename
         print("\n*********\n\nwritePlanToFile() file: "+str(filepath))
         with open(filepath, "w") as planFile:
             planFile.write("# file: "+filename+" "+timestamp+"\n")
@@ -1924,8 +1923,8 @@ class ObsPlanner:
     def writePrettyPlanToFile(self, satId, timestamp):
         filename = self.getHorizonFilenamePrefix(satId, self.horizonId)+"."+timestamp+".prettyPlan.txt"
         csvFilename = self.getHorizonFilenamePrefix(satId, self.horizonId)+"."+timestamp+".prettyPlan.csv"
-        filepath = self.dataPath + "RUN001/"+filename
-        csvFilepath = self.dataPath + "RUN001/"+csvFilename
+        filepath = self.dataPath + self.experimentRun+"/"+filename
+        csvFilepath = self.dataPath + self.experimentRun+"/"+csvFilename
         print("\n*********\n\nwritePrettyPlanToFile() file: "+str(filepath))
         satSensorStates = self.sensorStates[satId]
         Lstates = satSensorStates["L"]
@@ -2032,6 +2031,11 @@ class ObsPlanner:
 
 
     def prettyPrintPlanCsvRow(self, csvPlanFile, row):
+        tick = row["TP"]
+        tick = tick - self.horizonStart
+        if tick == 0:
+            tick = "0"
+        row["TP"] = tick
         for key in list(row.keys()):
             term = row[key]
             if term:
@@ -2180,7 +2184,7 @@ class ObsPlanner:
                 allCommands.append(cmdDict)
         jsonCmds = json.dumps(allCommands)
         filename = "commands."+str(self.horizonId)+".json"
-        filepath = self.dataPath + "RUN001/"+ filename
+        filepath = self.dataPath + self.experimentRun+"/"+ filename
         f = open(filepath, "w")
         f.write(str(jsonCmds))
         f.close()
@@ -2188,7 +2192,7 @@ class ObsPlanner:
 
     def readPriorObservations(self, satId, hId):
         fileprefix = self.getHorizonFilenamePrefix(satId, hId)
-        filepath = self.dataPath +"RUN001/"
+        filepath = self.dataPath +self.experimentRun+"/"
         filename = dshieldUtil.getPriorObservationFilename(filepath, fileprefix)
         filepath += filename
         horizonObsCount = 0
