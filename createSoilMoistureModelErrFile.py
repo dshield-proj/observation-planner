@@ -6,8 +6,10 @@ import dshieldUtil
 
 class SmmConverter:
     def __init__(self):
-        self.dataPath = "/Users/richardlevinson/DshieldDemoData2022/"
-        self.inputFileDate = datetime.date(2020,1,4) # y,m,d
+        # self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run1/"  # first  24 hours (1/4/20)
+        self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/"    # second 24 hours (1/5/20)
+        self.inputFileDate = datetime.date(2020,1,5) # y,m,d
+        self.experimentRun = "RUN002"  # "RUN001"
         self.allGp ={}
         self.soilMoistureModel = []
         self.allGpi = set()
@@ -61,7 +63,7 @@ class SmmConverter:
     def readSoilMoistureFiles(self):
         modelTimes = [("0130", 0), ("0430", 3), ("0730",6), ("1030",9), ("1330",12), ("1630", 15), ("1930", 18), ("2230", 21)]
         for modelTime in modelTimes:
-            filepathIn = self.dataPath + "target_value/RUN001/targetVal_"
+            filepathIn = self.dataPath + "target_value/" + self.experimentRun+"/targetVal_"
             fileSuffix = dshieldUtil.convertModelTimeToFilenameFormat(self.inputFileDate, modelTime[0])
             filepathIn += fileSuffix
             print("\nReading soilMoisture file: " + filepathIn)
