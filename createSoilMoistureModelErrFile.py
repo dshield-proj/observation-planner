@@ -7,9 +7,9 @@ import dshieldUtil
 class SmmConverter:
     def __init__(self):
         # self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run1/"  # first  24 hours (1/4/20)
-        self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/"    # second 24 hours (1/5/20)
-        self.inputFileDate = datetime.date(2020,1,5) # y,m,d
-        self.experimentRun = "RUN002"  # "RUN001"
+        self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run3/"    # second 24 hours (1/5/20)
+        self.inputFileDate = datetime.date(2020,1,6) # y,m,d
+        self.experimentRun = "RUN003" #"RUN002"  # "RUN001"
         self.allGp ={}
         self.soilMoistureModel = []
         self.allGpi = set()

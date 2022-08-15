@@ -12,7 +12,8 @@ from createSoilMoistureModelErrFile import SmmConverter
 class ObsPreprocessor:
     def __init__(self):
         # self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run1/"  # first  24 hours (1/4/20)
-        self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/"    # second 24 hours (1/5/20)
+        self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/"  # second 24 hours (1/5/20)
+        # self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run3/"    # third  24 hours (1/6/20)
         self.gpDict = {}
         self.latDict = {} # maps latitude into GPI for reading saturation data
         self.slewTable = {}

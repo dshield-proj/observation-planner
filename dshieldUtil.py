@@ -2,7 +2,8 @@ import os
 from decimal import Decimal
 
 # dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run1/"  # first  24 hours (1/4/20)
-dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/"    # second 24 hours (1/5/20)
+dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/"   # second 24 hours (1/5/20)
+# dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run3/"    # third  24 hours (1/6/20)
 
 def readMeasurementErrorTables():
     errTable1  = readMeasurementErrorTable(1)
@@ -256,7 +257,7 @@ def getPrepPathForSat(satId):
 def getPriorObservationFilename(filepath, fileprefix):
     files = os.listdir(filepath)
     for f in files:
-        if f.startswith(fileprefix) and f.endswith(".plan.txt"):
+        if not os.path.isdir(f) and f.startswith(fileprefix) and f.endswith(".plan.txt"):
             return f
 
 def roundIt(n, precision=5):
