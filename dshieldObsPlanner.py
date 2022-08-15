@@ -15,11 +15,11 @@ def main():
 
     # settings
     satList = [1,2,3]
-    horizonId = 3
+    horizonId = 4
     maxTick = None
     strategy = "beam.3"  #dfs # beam.2
     inputFileDate = datetime.date(2020,1,5) # y,m,d = 1/4/2022
-    experimentRun = "RUN002" #"RUN001"
+    experimentRun = "RUN002" #"RUN002" #"RUN001"
     # main processing
     obsPlanner = ObsPlanner(satList, inputFileDate, horizonId, experimentRun, maxTick, strategy)
     obsPlanner.statsInit()
@@ -38,6 +38,8 @@ class ObsPlanner:
         # self.demoDataPath = "/Users/richardlevinson/DshieldDemoData2022_Run1/"
         self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/planner/"
         self.demoDataPath = "/Users/richardlevinson/DshieldDemoData2022_Run2/"
+        # self.dataPath = "/Users/richardlevinson/DshieldDemoData2022_Run3/planner/"
+        # self.demoDataPath = "/Users/richardlevinson/DshieldDemoData2022_Run3/"
         # config params (set in start())
         # planner config params
         beamwidth = 1
@@ -53,6 +55,7 @@ class ObsPlanner:
         self.horizonDur = 21600
         self.experimentRun = experimentRun
         self.maxTick =  maxTick
+        self.usePriorObsFromRun1 = True
         self.useSortedGP = False
         self.sortedGPpct = 0.15
         self.planner = Planit()
@@ -197,7 +200,11 @@ class ObsPlanner:
             # TODO: readFlatHorizonFile doesn't create "combos" for multi-obs
             self.readFlatHorizonFile(satId)
             # self.satEvents[satId] = self.horizonEvents
+        if self.usePriorObsFromRun1:
+            self.readPriorObservationsFromRun1()
+            print("initializeEvents() read "+str(len(self.priorGPs)) + " prior observed GP from Run 1")
         for hId in range(1,self.horizonId):
+            # NOTE: priorObs listed for each sat contains all observations for all sats
             self.readPriorObservations(self.satList[0], hId)
 
     def createDecisionVars(self):
@@ -2226,6 +2233,44 @@ class ObsPlanner:
             print("read "+str(horizonObsCount) + " obs from horizon "+str(hId)+", "+str(len(self.priorGPs)) + " total prior observations, set: "+str(len(priorSet)))
         else:
             print("readPriorObservations() file not found: "+filepath)
+
+    def readPriorObservationsFromRun1(self):
+        plannerFilepath = "/Users/richardlevinson/DshieldDemoData2022_Run1/planner/RUN001/"
+        # NOTE: priorObs listed for each sat contains all observations for all sats
+        satId = self.satList[0]
+        for hId in range(1,5):
+            fileprefix = self.getHorizonFilenamePrefix(satId, hId)
+            filename = dshieldUtil.getPriorObservationFilename(plannerFilepath, fileprefix)
+            filepath = plannerFilepath + filename
+            horizonObsCount = 0
+            if os.path.exists(filepath):
+                print("readPriorObservationsFromRun1() reading prior observations from file: "+filename)
+                with open(filepath, "r") as f:
+                    readingGP = False
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("# Final observation:"):
+                            prefixSize = len("# Final observation:")
+                            finalObs = line[prefixSize:].strip()
+                            finalObs = ast.literal_eval(finalObs)
+                            finalTick = finalObs['finalTick']
+                            finalAngle = finalObs['finalAngle']
+                            print("readPriorObservationsFromRun1() final tick: "+str(finalTick)+", finalAngle: "+str(finalAngle))
+
+                        if line.startswith("# Observed GP"):
+                            readingGP = True
+                        elif not line.startswith("#"):
+                            if readingGP:
+                                terms = line.split(",")
+                                count = len(terms)
+                                print("parsed "+str(count) +" terms")
+                                for term in terms:
+                                    self.priorGPs.append(int(term))
+                                    horizonObsCount += 1
+                priorSet = set(self.priorGPs)
+                print("readPriorObservationsFromRun1() read "+str(horizonObsCount) + " obs from horizon "+str(hId)+", "+str(len(self.priorGPs)) + " total prior observations, set: "+str(len(priorSet)))
+            else:
+                print("readPriorObservationsFromRun1() file not found: "+filepath)
 
     def readEclipseFiles(self):
         for satId in self.satList:
